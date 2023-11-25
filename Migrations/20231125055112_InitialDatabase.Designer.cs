@@ -11,7 +11,7 @@ using OrdersWebAPI.EfCore;
 namespace OrdersWebAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20231121014038_InitialDatabase")]
+    [Migration("20231125055112_InitialDatabase")]
     partial class InitialDatabase
     {
         /// <inheritdoc />
@@ -37,7 +37,9 @@ namespace OrdersWebAPI.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("OrderNumber")
-                        .HasColumnType("longtext");
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
 
                     b.Property<int>("TotalAmount")
                         .HasColumnType("int");
@@ -79,13 +81,11 @@ namespace OrdersWebAPI.Migrations
 
             modelBuilder.Entity("OrdersWebAPI.Model.OrderItem", b =>
                 {
-                    b.HasOne("OrdersWebAPI.Model.Order", "Order")
+                    b.HasOne("OrdersWebAPI.Model.Order", null)
                         .WithMany("OrderItems")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Order");
                 });
 
             modelBuilder.Entity("OrdersWebAPI.Model.Order", b =>

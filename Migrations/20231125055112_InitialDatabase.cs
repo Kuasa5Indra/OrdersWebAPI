@@ -19,7 +19,7 @@ namespace OrdersWebAPI.Migrations
                 columns: table => new
                 {
                     OrderId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
-                    OrderNumber = table.Column<string>(type: "longtext", nullable: true)
+                    OrderNumber = table.Column<string>(type: "varchar(20)", maxLength: 20, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     CustomerName = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),

@@ -72,7 +72,7 @@ namespace OrdersWebAPI.Controllers
 
             if(order == null)
             {
-                return NotFound();
+                return Problem(statusCode: 404, detail: "Order doesn't exist");
             }
 
             OrderResponse response = new(order);
@@ -94,7 +94,7 @@ namespace OrdersWebAPI.Controllers
 
             if (order == null)
             {
-                return BadRequest();
+                return Problem(statusCode: 400, detail: "Order doesn't exist while updating data");
             }
 
             order.CustomerName = request.CustomerName;
@@ -121,7 +121,7 @@ namespace OrdersWebAPI.Controllers
 
             if (order == null)
             {
-                return NotFound();
+                return Problem(statusCode: 404, detail: "Order doesn't exist");
             }
 
             _appDbContext.Orders.Remove(order);
@@ -191,7 +191,7 @@ namespace OrdersWebAPI.Controllers
 
             if (orderItem == null)
             {
-                return NotFound();
+                return Problem(statusCode: 404, detail: "Order item doesn't exist");
             }
 
             OrderItemResponse response = new(orderItem);
@@ -214,7 +214,7 @@ namespace OrdersWebAPI.Controllers
 
             if (orderItem == null)
             {
-                return BadRequest();
+                return Problem(statusCode: 400, detail: "Order item doesn't exist while updating data");
             }
 
             orderItem.ProductName = request.ProductName;
@@ -244,7 +244,7 @@ namespace OrdersWebAPI.Controllers
 
             if (orderItem == null)
             {
-                return NotFound();
+                return Problem(statusCode: 404, detail: "Order item doesn't exist");
             }
 
             _appDbContext.OrderItems.Remove(orderItem);

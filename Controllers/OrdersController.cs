@@ -7,9 +7,7 @@ using OrdersWebAPI.Response;
 
 namespace OrdersWebAPI.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class OrdersController : ControllerBase
+    public class OrdersController : ApiControllerBase
     {
         private readonly AppDbContext _appDbContext;
 
@@ -18,7 +16,12 @@ namespace OrdersWebAPI.Controllers
             _appDbContext = appDbContext;
         }
 
+        /// <summary>
+        /// Retrieve all orders
+        /// </summary>
+        /// <response code="200">OK</response>
         [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetOrders()
         {
             var orders =  await _appDbContext.Orders.ToListAsync();
@@ -33,7 +36,12 @@ namespace OrdersWebAPI.Controllers
             return Ok(ordersResponse);
         }
 
+        /// <summary>
+        /// Add a new order
+        /// </summary>
+        /// <response code="201">Created</response>
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status201Created)]
         public async Task<IActionResult> CreateOrder(OrderAddRequest request)
         {
             var datetime = DateTime.Now.ToString("yyyyMMddHHmm");
@@ -50,7 +58,14 @@ namespace OrdersWebAPI.Controllers
             return CreatedAtAction(nameof(GetOrder), new { id = order.OrderId }, response); 
         }
 
+        /// <summary>
+        /// Retrieve an order by ID
+        /// </summary>
+        /// <response code="200">OK</response>
+        /// <response code="404">if order with the given ID does not exist</response>
         [HttpGet("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetOrder(Guid id)
         {
             var order = await _appDbContext.Orders.FindAsync(id);
@@ -65,7 +80,14 @@ namespace OrdersWebAPI.Controllers
             return Ok(response);
         }
 
+        /// <summary>
+        /// Update an existing order
+        /// </summary>
+        /// <response code="200">OK</response>
+        /// <response code="400">if the ID in the request body does not match the route parameter</response>
         [HttpPatch("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> UpdateOrder(Guid id, OrderUpdateRequest request)
         {
             var order = await _appDbContext.Orders.FindAsync(id);
@@ -85,7 +107,14 @@ namespace OrdersWebAPI.Controllers
             return Ok(response);
         }
 
+        /// <summary>
+        /// Delete an order
+        /// </summary>
+        /// <response code="204">No content</response>
+        /// <response code="404">if order with the given ID does not exist</response>
         [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteOrder(Guid id)
         {
             var order = await _appDbContext.Orders.FindAsync(id);
@@ -102,7 +131,12 @@ namespace OrdersWebAPI.Controllers
             return NoContent();
         }
 
+        /// <summary>
+        /// Retrieve all order items for a specific order
+        /// </summary>
+        /// <response code="200">OK</response>
         [HttpGet("{orderId}/items")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetOrderItems(Guid orderId)
         {
             var orderItems = await _appDbContext.OrderItems.Where(o => o.OrderId.Equals(orderId)).ToListAsync();
@@ -117,7 +151,12 @@ namespace OrdersWebAPI.Controllers
             return Ok(orderItemResponses);
         }
 
+        /// <summary>
+        /// Add a new order item
+        /// </summary>
+        /// <response code="201">Created</response>
         [HttpPost("{orderId}/items")]
+        [ProducesResponseType(StatusCodes.Status201Created)]
         public async Task<IActionResult> CreateOrderItem(Guid orderId, OrderItemAddRequest request)
         {
             OrderItem orderItem = new()
@@ -137,7 +176,14 @@ namespace OrdersWebAPI.Controllers
             return CreatedAtAction(nameof(GetOrderItem), new { orderId = orderItem.OrderId, id = orderItem.OrderItemId}, orderItem);
         }
 
+        /// <summary>
+        /// Retrieve an order item by ID
+        /// </summary>
+        /// <response code="200">OK</response>
+        /// <response code="404">if order item with the given ID does not exist</response>
         [HttpGet("{orderId}/items/{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetOrderItem(Guid orderId, Guid id)
         {
             var orderItem = await _appDbContext.OrderItems.Where(o => o.OrderId.Equals(orderId))
@@ -153,7 +199,14 @@ namespace OrdersWebAPI.Controllers
             return Ok(response);
         }
 
+        /// <summary>
+        /// Update an existing order item
+        /// </summary>
+        /// <response code="200">OK</response>
+        /// <response code="400">if the ID in the request body does not match the route parameter</response>
         [HttpPatch("{orderId}/items/{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> UpdateOrderItem(Guid orderId, Guid id, OrderItemUpdateRequest request)
         {
             var orderItem = await _appDbContext.OrderItems.Where(o => o.OrderId.Equals(orderId))
@@ -176,7 +229,14 @@ namespace OrdersWebAPI.Controllers
             return Ok(response);
         }
 
+        /// <summary>
+        /// Delete an order item
+        /// </summary>
+        /// <response code="204">No content</response>
+        /// <response code="404">if order item with the given ID does not exist</response>
         [HttpDelete("{orderId}/items/{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteOrderItem(Guid orderId, Guid id)
         {
             var orderItem = await _appDbContext.OrderItems.Where(o => o.OrderId.Equals(orderId))

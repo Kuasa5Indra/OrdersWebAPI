@@ -7,7 +7,9 @@ using OrdersWebAPI.Response;
 
 namespace OrdersWebAPI.Controllers
 {
-    public class OrdersController : ApiControllerBase
+    [Route("api/[controller]")]
+    [ApiController]
+    public class OrdersController : ControllerBase
     {
         private readonly AppDbContext _appDbContext;
 

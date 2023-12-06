@@ -12,10 +12,12 @@ namespace OrdersWebAPI.Controllers
     public class OrdersController : ControllerBase
     {
         private readonly AppDbContext _appDbContext;
+        private readonly ILogger<OrdersController> _logger;
 
-        public OrdersController(AppDbContext appDbContext)
+        public OrdersController(AppDbContext appDbContext, ILogger<OrdersController> logger)
         {
             _appDbContext = appDbContext;
+            _logger = logger;
         }
 
         /// <summary>
@@ -26,6 +28,7 @@ namespace OrdersWebAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetOrders()
         {
+            _logger.LogInformation("Getting order data");
             var orders =  await _appDbContext.Orders.ToListAsync();
 
             List<OrderResponse> ordersResponse = new();
@@ -34,6 +37,7 @@ namespace OrdersWebAPI.Controllers
             {
                 ordersResponse.Add(new OrderResponse(order));
             }
+            _logger.LogInformation("Successfully get order data");
 
             return Ok(ordersResponse);
         }
@@ -54,8 +58,10 @@ namespace OrdersWebAPI.Controllers
                 OrderDate = request.OrderDate,
                 TotalAmount = request.TotalAmount
             };
+            _logger.LogInformation("Attempt to create order");
             await _appDbContext.Orders.AddAsync(order);
             await _appDbContext.SaveChangesAsync();
+            _logger.LogInformation("Successfully create order");
             OrderResponse response = new(order);
             return CreatedAtAction(nameof(GetOrder), new { id = order.OrderId }, response); 
         }
@@ -70,13 +76,16 @@ namespace OrdersWebAPI.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetOrder(Guid id)
         {
+            _logger.LogInformation("Attempt to find order {id} ", id);
             var order = await _appDbContext.Orders.FindAsync(id);
 
             if(order == null)
             {
+                _logger.LogError("Order {id} not found", id);
                 return Problem(statusCode: 404, detail: "Order doesn't exist");
             }
 
+            _logger.LogInformation("Successfully get order {id}", id);
             OrderResponse response = new(order);
 
             return Ok(response);
@@ -92,17 +101,21 @@ namespace OrdersWebAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> UpdateOrder(Guid id, OrderUpdateRequest request)
         {
+            _logger.LogInformation("Attempt to find order {id} ", id);
             var order = await _appDbContext.Orders.FindAsync(id);
 
             if (order == null)
             {
+                _logger.LogError("Order {id} not found", id);
                 return Problem(statusCode: 400, detail: "Order doesn't exist while updating data");
             }
 
+            _logger.LogInformation("Attempt to update Order");
             order.CustomerName = request.CustomerName;
             order.TotalAmount = request.TotalAmount;
 
             await _appDbContext.SaveChangesAsync();
+            _logger.LogInformation("Successfully update Order");
 
             OrderResponse response = new(order);
 
@@ -119,16 +132,20 @@ namespace OrdersWebAPI.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteOrder(Guid id)
         {
+            _logger.LogInformation("Attempt to find order {id} ", id);
             var order = await _appDbContext.Orders.FindAsync(id);
 
             if (order == null)
             {
+                _logger.LogError("Order {id} not found", id);
                 return Problem(statusCode: 404, detail: "Order doesn't exist");
             }
 
+            _logger.LogInformation("Attempt to delete Order");
             _appDbContext.Orders.Remove(order);
 
             await _appDbContext.SaveChangesAsync();
+            _logger.LogInformation("Successfully delete Order");
 
             return NoContent();
         }
@@ -141,6 +158,7 @@ namespace OrdersWebAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetOrderItems(Guid orderId)
         {
+            _logger.LogInformation("Getting order items based on order id {id}", orderId);
             var orderItems = await _appDbContext.OrderItems.Where(o => o.OrderId.Equals(orderId)).ToListAsync();
 
             List<OrderItemResponse> orderItemResponses = new();
@@ -149,6 +167,7 @@ namespace OrdersWebAPI.Controllers
             {
                 orderItemResponses.Add(new OrderItemResponse(item));
             }
+            _logger.LogInformation("Successfully get order items based on order id {id}", orderId);
 
             return Ok(orderItemResponses);
         }
@@ -170,8 +189,10 @@ namespace OrdersWebAPI.Controllers
                 TotalPrice = (request.Quantity * request.UnitPrice)
             };
 
+            _logger.LogInformation("Create order item based on order id {id}", orderId);
             await _appDbContext.OrderItems.AddAsync(orderItem);
             await _appDbContext.SaveChangesAsync();
+            _logger.LogInformation("Successfully create order item based on order id {id}", orderId);
 
             OrderItemResponse response = new(orderItem);
 
@@ -188,14 +209,17 @@ namespace OrdersWebAPI.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetOrderItem(Guid orderId, Guid id)
         {
+            _logger.LogInformation("Attempt to find order item {id} based on order {orderId}", id, orderId);
             var orderItem = await _appDbContext.OrderItems.Where(o => o.OrderId.Equals(orderId))
                 .Where(o => o.OrderItemId.Equals(id)).FirstOrDefaultAsync();
 
             if (orderItem == null)
             {
+                _logger.LogError("Order item {id} not found", id);
                 return Problem(statusCode: 404, detail: "Order item doesn't exist");
             }
 
+            _logger.LogInformation("Successfully get order item {id} based on order {orderId}", id, orderId);
             OrderItemResponse response = new(orderItem);
 
             return Ok(response);
@@ -211,20 +235,24 @@ namespace OrdersWebAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> UpdateOrderItem(Guid orderId, Guid id, OrderItemUpdateRequest request)
         {
+            _logger.LogInformation("Attempt to find order item {id} based on order {orderId}", id, orderId);
             var orderItem = await _appDbContext.OrderItems.Where(o => o.OrderId.Equals(orderId))
                 .Where(o => o.OrderItemId.Equals(id)).FirstOrDefaultAsync();
 
             if (orderItem == null)
             {
+                _logger.LogError("Order item {id} not found", id);
                 return Problem(statusCode: 400, detail: "Order item doesn't exist while updating data");
             }
 
+            _logger.LogInformation("Attempt to update order item");
             orderItem.ProductName = request.ProductName;
             orderItem.UnitPrice = request.UnitPrice;
             orderItem.Quantity = request.Quantity;
             orderItem.TotalPrice = (request.UnitPrice * request.Quantity);
 
             await _appDbContext.SaveChangesAsync();
+            _logger.LogInformation("Successfully update order item");
 
             OrderItemResponse response = new(orderItem);
 
@@ -241,16 +269,20 @@ namespace OrdersWebAPI.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteOrderItem(Guid orderId, Guid id)
         {
+            _logger.LogInformation("Attempt to find order item {id} based on order {orderId}", id, orderId);
             var orderItem = await _appDbContext.OrderItems.Where(o => o.OrderId.Equals(orderId))
                 .Where(o => o.OrderItemId.Equals(id)).FirstOrDefaultAsync();
 
             if (orderItem == null)
             {
+                _logger.LogError("Order item {id} not found", id);
                 return Problem(statusCode: 404, detail: "Order item doesn't exist");
             }
 
+            _logger.LogInformation("Attempt to delete order item");
             _appDbContext.OrderItems.Remove(orderItem);
             await _appDbContext.SaveChangesAsync();
+            _logger.LogInformation("Successfully delete order item");
 
             return NoContent();
         }

@@ -3,6 +3,8 @@ using Microsoft.OpenApi.Models;
 using Microsoft.EntityFrameworkCore;
 using OrdersWebAPI.EfCore;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,6 +34,20 @@ var connectionString = builder.Configuration.GetConnectionString("AppDbConnectio
 builder.Services.AddDbContext<AppDbContext>(dbContextOptions => dbContextOptions
                 .UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
+builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
+{
+    options.User.RequireUniqueEmail = true;
+    options.Password.RequiredLength = 5;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireUppercase = false;
+    options.Password.RequireLowercase = true;
+    options.Password.RequireDigit = true;
+})
+    .AddEntityFrameworkStores<AppDbContext>()
+    .AddDefaultTokenProviders()
+    .AddUserStore<UserStore<ApplicationUser, ApplicationRole, AppDbContext, Guid>>()
+    .AddRoleStore<RoleStore<ApplicationRole, AppDbContext, Guid>>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -46,6 +62,7 @@ else
     app.UseExceptionHandler("/error");
 }
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

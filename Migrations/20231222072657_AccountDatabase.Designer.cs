@@ -11,7 +11,7 @@ using OrdersWebAPI.EfCore;
 namespace OrdersWebAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20231221162804_AccountDatabase")]
+    [Migration("20231222072657_AccountDatabase")]
     partial class AccountDatabase
     {
         /// <inheritdoc />
@@ -162,6 +162,7 @@ namespace OrdersWebAPI.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("Email")
+                        .IsRequired()
                         .HasMaxLength(256)
                         .HasColumnType("varchar(256)");
 
@@ -191,7 +192,9 @@ namespace OrdersWebAPI.Migrations
                         .HasColumnType("varchar(50)");
 
                     b.Property<string>("PhoneNumber")
-                        .HasColumnType("longtext");
+                        .IsRequired()
+                        .HasMaxLength(15)
+                        .HasColumnType("varchar(15)");
 
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("tinyint(1)");
@@ -203,12 +206,14 @@ namespace OrdersWebAPI.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<string>("UserName")
+                        .IsRequired()
                         .HasMaxLength(256)
                         .HasColumnType("varchar(256)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("NormalizedEmail")
+                        .IsUnique()
                         .HasDatabaseName("EmailIndex");
 
                     b.HasIndex("NormalizedUserName")

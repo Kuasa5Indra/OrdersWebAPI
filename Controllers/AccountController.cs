@@ -33,7 +33,7 @@ namespace OrdersWebAPI.Controllers
             {
                 Email = request.Email,
                 PhoneNumber = request.PhoneNumber,
-                UserName = request.Email,
+                UserName = request.UserName,
                 PersonName = request.PersonName
             };
 
@@ -46,24 +46,39 @@ namespace OrdersWebAPI.Controllers
             }
             else
             {
-                string errorMessage = string.Join(",", result.Errors.Select(e => e.Description));
+                string errorMessage = string.Join(", ", result.Errors.Select(e => e.Description));
                 return Problem(errorMessage);
             }
         }
 
-        [HttpGet]
-        public async Task<IActionResult> IsEmailAleradyRegistered(string email)
+        [HttpPost]
+        public async Task<IActionResult> Login (LoginRequest request)
         {
-            ApplicationUser? user = await _userManager.FindByEmailAsync(email);
+            var result = await _signInManager.PasswordSignInAsync(request.Username, request.Password, isPersistent: false, lockoutOnFailure: false);
 
-            if(user == null)
+            if (result.Succeeded)
             {
-                return Ok(true);
+                ApplicationUser? user = await _userManager.FindByNameAsync(request.Username);
+
+                if (user == null)
+                {
+                    return NoContent();
+                }
+
+                return Ok(new { personName = user.PersonName, username = user.UserName });
             }
-            else
+            else 
             {
-                return Ok(false);
+                return Problem("Invalid username or password");
             }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Logout()
+        {
+            await _signInManager.SignOutAsync();
+
+            return NoContent();
         }
     }
 }

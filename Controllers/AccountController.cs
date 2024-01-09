@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using OrdersWebAPI.EfCore;
 using OrdersWebAPI.Request;
+using OrdersWebAPI.ServiceContract;
 
 namespace OrdersWebAPI.Controllers
 {
@@ -15,15 +16,18 @@ namespace OrdersWebAPI.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly RoleManager<ApplicationRole> _roleManager;
+        private readonly IJwtService _jwtService;
 
         public AccountController(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
-            RoleManager<ApplicationRole> roleManager)
+            RoleManager<ApplicationRole> roleManager,
+            IJwtService jwtService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _roleManager = roleManager;
+            _jwtService = jwtService;
         }
 
         [HttpPost]
@@ -42,7 +46,9 @@ namespace OrdersWebAPI.Controllers
             if (result.Succeeded)
             {
                 await _signInManager.SignInAsync(user, isPersistent: false);
-                return Ok(user);
+
+                var authenticationResponse = _jwtService.CreateJwtToken(user);
+                return Ok(authenticationResponse);
             }
             else
             {
@@ -65,7 +71,9 @@ namespace OrdersWebAPI.Controllers
                     return NoContent();
                 }
 
-                return Ok(new { personName = user.PersonName, username = user.UserName });
+                var authenticationResponse = _jwtService.CreateJwtToken(user);
+
+                return Ok(authenticationResponse);
             }
             else 
             {

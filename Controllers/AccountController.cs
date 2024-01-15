@@ -48,6 +48,10 @@ namespace OrdersWebAPI.Controllers
                 await _signInManager.SignInAsync(user, isPersistent: false);
 
                 var authenticationResponse = _jwtService.CreateJwtToken(user);
+                user.RefreshToken = authenticationResponse.RefreshToken;
+                user.RefreshTokenExpiration = authenticationResponse.RefreshTokenExpiration;
+
+                await _userManager.UpdateAsync(user);
                 return Ok(authenticationResponse);
             }
             else
@@ -72,6 +76,11 @@ namespace OrdersWebAPI.Controllers
                 }
 
                 var authenticationResponse = _jwtService.CreateJwtToken(user);
+
+                user.RefreshToken = authenticationResponse.RefreshToken;
+                user.RefreshTokenExpiration = authenticationResponse.RefreshTokenExpiration;
+
+                await _userManager.UpdateAsync(user);
 
                 return Ok(authenticationResponse);
             }

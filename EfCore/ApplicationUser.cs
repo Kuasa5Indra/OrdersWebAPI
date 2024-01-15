@@ -16,5 +16,7 @@ namespace OrdersWebAPI.EfCore
         public override string? UserName { get; set; }
         [Required, StringLength(15)]
         public override string? PhoneNumber { get; set; }
+        public string? RefreshToken { get; set; }
+        public DateTime? RefreshTokenExpiration { get; set; }
     }
 }

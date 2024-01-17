@@ -57,6 +57,35 @@ namespace OrdersWebAPI.Service
             }; 
         }
 
+        public ClaimsPrincipal? GetPrincipalFromJwtToken(string? token)
+        {
+            var tokenValidationParameters = new TokenValidationParameters() 
+            { 
+                ValidateAudience = true,
+                ValidAudience = _configuration["Jwt:Audience"],
+                ValidateIssuer = true,
+                ValidIssuer = _configuration["Jwt:Issuer"],
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"])),
+                ValidateLifetime = false, // check whether token is actually expire or not, set it to false will process token no matter if its not expired
+            };
+
+            JwtSecurityTokenHandler jwtSecurityTokenHandler = new JwtSecurityTokenHandler();
+
+            ClaimsPrincipal principal = jwtSecurityTokenHandler.ValidateToken(
+                token,
+                tokenValidationParameters,
+                out SecurityToken securityToken);
+
+            if(securityToken is not JwtSecurityToken jwtSecurityToken
+               || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+            {
+                throw new SecurityTokenException("Invalid security token");
+            }
+
+            return principal;
+        }
+
         private string GenerateRefreshToken()
         {
             byte[] bytes = new byte[64];

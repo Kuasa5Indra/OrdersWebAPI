@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using OrdersWebAPI.EfCore;
 using OrdersWebAPI.Request;
+using OrdersWebAPI.Response;
 using OrdersWebAPI.ServiceContract;
+using System.Security.Claims;
 
 namespace OrdersWebAPI.Controllers
 {
@@ -96,6 +98,43 @@ namespace OrdersWebAPI.Controllers
             await _signInManager.SignOutAsync();
 
             return NoContent();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GenerateNewToken(TokenRequest request)
+        {
+            if(request == null)
+            {
+                return BadRequest("Invalid client request");
+            }
+
+            string? token = request.Token;
+            string? refreshToken = request.RefreshToken;
+
+            ClaimsPrincipal? principal = _jwtService.GetPrincipalFromJwtToken(token);
+
+            if (principal == null)
+            {
+                return BadRequest("Invalid jwt access token");
+            }
+
+            string? id = principal.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            ApplicationUser? user = await _userManager.FindByIdAsync(id);
+
+            if(user == null || user.RefreshToken != request.RefreshToken || user.RefreshTokenExpiration <= DateTime.UtcNow)
+            {
+                return BadRequest("Invalid Refresh Token");
+            }
+
+            AuthenticationResponse authenticationResponse = _jwtService.CreateJwtToken(user);
+
+            user.RefreshToken = authenticationResponse.RefreshToken;
+            user.RefreshTokenExpiration = authenticationResponse.RefreshTokenExpiration;
+
+            await _userManager.UpdateAsync(user);
+
+            return Ok(authenticationResponse);
         }
     }
 }

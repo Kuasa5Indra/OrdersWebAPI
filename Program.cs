@@ -105,6 +105,16 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policyBuilder =>
+    {
+        policyBuilder.WithOrigins(builder.Configuration.GetSection("AllowedOrigins").Get<string[]>())
+                     .WithHeaders("Authorization", "origin", "accept", "content-type")
+                     .WithMethods("GET", "POST", "PUT", "PATCH", "DELETE");
+    });
+});
+
 builder.Services.AddAuthorization(options =>
 {
 
@@ -123,6 +133,8 @@ else
 {
     app.UseExceptionHandler("/error");
 }
+
+app.UseCors();
 
 app.UseAuthentication();
 app.UseAuthorization();
